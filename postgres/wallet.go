@@ -1,8 +1,9 @@
 package postgres
 
 import (
-	"github.com/KKGo-Software-engineering/fun-exercise-api/wallet"
 	"time"
+
+	"github.com/KKGo-Software-engineering/fun-exercise-api/wallet"
 )
 
 type Wallet struct {
@@ -42,6 +43,39 @@ func (p *Postgres) Wallets() ([]wallet.Wallet, error) {
 			Balance:    w.Balance,
 			CreatedAt:  w.CreatedAt,
 		})
+	}
+	return wallets, nil
+}
+
+func (p *Postgres) WalletsByType(walletType string) ([]wallet.Wallet, error) {
+	rows, err := p.Db.Query("SELECT * FROM user_wallet")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var wallets []wallet.Wallet
+	for rows.Next() {
+		var w Wallet
+		err := rows.Scan(&w.ID,
+			&w.UserID, &w.UserName,
+			&w.WalletName, &w.WalletType,
+			&w.Balance, &w.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if walletType == w.WalletType {
+			wallets = append(wallets, wallet.Wallet{
+				ID:         w.ID,
+				UserID:     w.UserID,
+				UserName:   w.UserName,
+				WalletName: w.WalletName,
+				WalletType: w.WalletType,
+				Balance:    w.Balance,
+				CreatedAt:  w.CreatedAt,
+			})
+		}
 	}
 	return wallets, nil
 }
