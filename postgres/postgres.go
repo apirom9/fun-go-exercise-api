@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -13,8 +13,7 @@ type Postgres struct {
 }
 
 func New() (*Postgres, error) {
-	databaseSource := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable", "localhost", 5432, "root", "password", "wallet")
+	databaseSource := os.Getenv("CONNECTION_STRING")
 	db, err := sql.Open("postgres", databaseSource)
 	if err != nil {
 		log.Fatal(err)
