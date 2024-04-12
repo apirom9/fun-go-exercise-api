@@ -28,6 +28,14 @@ const docTemplate = `{
                     "wallet"
                 ],
                 "summary": "Get all wallets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "wallet type",
+                        "name": "wallet_type",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

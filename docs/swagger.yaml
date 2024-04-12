@@ -40,6 +40,11 @@ paths:
       consumes:
       - application/json
       description: Get all wallets
+      parameters:
+      - description: wallet type
+        in: query
+        name: wallet_type
+        type: string
       produces:
       - application/json
       responses:
