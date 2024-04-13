@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -13,6 +14,7 @@ type Handler struct {
 type Storer interface {
 	Wallets() ([]Wallet, error)
 	WalletsByType(walletType string) ([]Wallet, error)
+	WalletByUser(userID int) (Wallet, error)
 }
 
 func New(db Storer) *Handler {
@@ -47,4 +49,30 @@ func (h *Handler) WalletHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 	return c.JSON(http.StatusOK, wallets)
+}
+
+// WalletHandlerByUser
+//
+//		@Summary		Get wallet by user Id
+//		@Description	Get wallet by user Id
+//		@Tags			wallet
+//		@Accept			json
+//		@Produce		json
+//		@Success		200	{object}	Wallet
+//		@Router			/api/v1/users/{id}/wallets [get]
+//		@Failure		500	{object}	Err
+//	 	@Param          id path int true "User ID"
+func (h *Handler) WalletHandlerByUser(c echo.Context) error {
+	userId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Unable to find wallet!"})
+	}
+	result, err := h.store.WalletByUser(userId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Unable to find wallet!"})
+	}
+	if result.UserID != userId {
+		return c.JSON(http.StatusNotFound, Err{Message: "Unable to find wallet!"})
+	}
+	return c.JSON(http.StatusOK, result)
 }
