@@ -79,3 +79,36 @@ func (p *Postgres) WalletsByType(walletType string) ([]wallet.Wallet, error) {
 	}
 	return wallets, nil
 }
+
+func (p *Postgres) WalletByUser(userId int) (wallet.Wallet, error) {
+
+	var result wallet.Wallet
+
+	rows, err := p.Db.Query("SELECT * FROM user_wallet WHERE user_id = $1", userId)
+	if err != nil {
+		return result, nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var w Wallet
+		err := rows.Scan(&w.ID,
+			&w.UserID, &w.UserName,
+			&w.WalletName, &w.WalletType,
+			&w.Balance, &w.CreatedAt,
+		)
+		if err != nil {
+			return result, err
+		}
+		result = wallet.Wallet{
+			ID:         w.ID,
+			UserID:     w.UserID,
+			UserName:   w.UserName,
+			WalletName: w.WalletName,
+			WalletType: w.WalletType,
+			Balance:    w.Balance,
+			CreatedAt:  w.CreatedAt,
+		}
+	}
+	return result, nil
+}
