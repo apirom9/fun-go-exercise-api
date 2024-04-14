@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,20 @@ import (
 type StubStorer struct {
 	wallets []Wallet
 	err     error
+}
+
+func (s StubStorer) CreateWallet(createWallet CreateWallet) (Wallet, error) {
+	result := Wallet{
+		ID:         1,
+		UserID:     createWallet.UserID,
+		UserName:   createWallet.UserName,
+		WalletName: createWallet.WalletName,
+		WalletType: createWallet.WalletType,
+		Balance:    createWallet.Balance,
+		CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
+	}
+	_ = append(s.wallets, result)
+	return result, nil
 }
 
 func (s StubStorer) Wallets() ([]Wallet, error) {
@@ -203,6 +218,47 @@ func TestWallet(t *testing.T) {
 		w := New(StubStorer{wallets: body})
 
 		w.WalletHandlerByUser(c)
+
+		gotJson := res.Body.Bytes()
+		var got Wallet
+		if err := json.Unmarshal(gotJson, &got); err != nil {
+			t.Errorf("Unable to unmarshal json: %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("expected %v but got %v", want, got)
+		}
+	})
+
+	t.Run("given user able to create wallet should return created wallet", func(t *testing.T) {
+		createWallet := CreateWallet{
+			UserID:     14,
+			UserName:   "Jame",
+			WalletName: "Jame Wallet",
+			WalletType: "Savings",
+			Balance:    1499.00,
+		}
+		body, err := json.Marshal(createWallet)
+		if err != nil {
+			t.Errorf("Unable to create body request, error: %v", err)
+		}
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(body))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		res := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, res)
+
+		want := Wallet{
+			ID:         1,
+			UserID:     createWallet.UserID,
+			UserName:   createWallet.UserName,
+			WalletName: createWallet.WalletName,
+			WalletType: createWallet.WalletType,
+			Balance:    createWallet.Balance,
+			CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
+		}
+		w := New(StubStorer{wallets: []Wallet{}})
+
+		w.CreateWallet(c)
 
 		gotJson := res.Body.Bytes()
 		var got Wallet
