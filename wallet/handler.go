@@ -15,6 +15,7 @@ type Storer interface {
 	Wallets() ([]Wallet, error)
 	WalletsByType(walletType string) ([]Wallet, error)
 	WalletByUser(userID int) (Wallet, error)
+	CreateWallet(createWallet CreateWallet) (Wallet, error)
 }
 
 func New(db Storer) *Handler {
@@ -73,6 +74,29 @@ func (h *Handler) WalletHandlerByUser(c echo.Context) error {
 	}
 	if result.UserID != userId {
 		return c.JSON(http.StatusNotFound, Err{Message: "Unable to find wallet!"})
+	}
+	return c.JSON(http.StatusOK, result)
+}
+
+// CreateWallet
+//
+//		@Summary		Create wallet
+//		@Description	Create wallet
+//		@Tags			wallet
+//		@Accept			json
+//		@Produce		json
+//		@Success		200	{object}	Wallet
+//		@Router			/api/v1/wallets [post]
+//		@Failure		500	{object}	Err
+//	 	@Param 			CreateWallet body CreateWallet true "Body for create wallet"
+func (h *Handler) CreateWallet(c echo.Context) error {
+	var createWallet CreateWallet
+	if err := c.Bind(&createWallet); err != nil {
+		return err
+	}
+	result, err := h.store.CreateWallet(createWallet)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, result)
 }

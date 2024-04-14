@@ -1,4 +1,17 @@
 definitions:
+  wallet.CreateWallet:
+    properties:
+      balance:
+        type: number
+      user_id:
+        type: integer
+      user_name:
+        type: string
+      wallet_name:
+        type: string
+      wallet_type:
+        type: string
+    type: object
   wallet.Err:
     properties:
       message:
@@ -82,6 +95,31 @@ paths:
           schema:
             $ref: '#/definitions/wallet.Err'
       summary: Get all wallets
+      tags:
+      - wallet
+    post:
+      consumes:
+      - application/json
+      description: Create wallet
+      parameters:
+      - description: Body for create wallet
+        in: body
+        name: CreateWallet
+        required: true
+        schema:
+          $ref: '#/definitions/wallet.CreateWallet'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wallet.Wallet'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/wallet.Err'
+      summary: Create wallet
       tags:
       - wallet
 swagger: "2.0"

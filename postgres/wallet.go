@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/KKGo-Software-engineering/fun-exercise-api/wallet"
@@ -108,6 +109,33 @@ func (p *Postgres) WalletByUser(userId int) (wallet.Wallet, error) {
 			WalletType: w.WalletType,
 			Balance:    w.Balance,
 			CreatedAt:  w.CreatedAt,
+		}
+	}
+	return result, nil
+}
+
+func (p *Postgres) CreateWallet(createWallet wallet.CreateWallet) (wallet.Wallet, error) {
+	var result wallet.Wallet
+	sqlStr := "INSERT INTO user_wallet(user_id,user_name,wallet_name,wallet_type,balance) VALUES($1,$2,$3,$4,$5) " +
+		"RETURNING id,user_id,user_name,wallet_name,wallet_type,balance,created_at"
+	rows, err := p.Db.Query(sqlStr, createWallet.UserID, createWallet.UserName,
+		createWallet.WalletName, createWallet.WalletType, createWallet.Balance)
+	fmt.Printf("%v\n", rows)
+	fmt.Printf("%v\n", err)
+	if err != nil {
+		return result, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&result.ID,
+			&result.UserID,
+			&result.UserName,
+			&result.WalletName,
+			&result.WalletType,
+			&result.Balance,
+			&result.CreatedAt)
+		if err != nil {
+			return result, err
 		}
 	}
 	return result, nil
