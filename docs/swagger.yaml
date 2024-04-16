@@ -17,6 +17,21 @@ definitions:
       message:
         type: string
     type: object
+  wallet.UpdateWallet:
+    properties:
+      balance:
+        type: number
+      id:
+        type: integer
+      user_id:
+        type: integer
+      user_name:
+        type: string
+      wallet_name:
+        type: string
+      wallet_type:
+        type: string
+    type: object
   wallet.Wallet:
     properties:
       balance:
@@ -95,6 +110,31 @@ paths:
           schema:
             $ref: '#/definitions/wallet.Err'
       summary: Get all wallets
+      tags:
+      - wallet
+    patch:
+      consumes:
+      - application/json
+      description: Update wallet
+      parameters:
+      - description: Body for update wallet
+        in: body
+        name: UpdateWallet
+        required: true
+        schema:
+          $ref: '#/definitions/wallet.UpdateWallet'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wallet.Wallet'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/wallet.Err'
+      summary: Update wallet
       tags:
       - wallet
     post:

@@ -3,6 +3,7 @@ package wallet
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -29,6 +30,23 @@ func (s StubStorer) CreateWallet(createWallet CreateWallet) (Wallet, error) {
 	}
 	_ = append(s.wallets, result)
 	return result, nil
+}
+
+func (s StubStorer) UpdateWallet(updateWallet UpdateWallet) (Wallet, error) {
+
+	for _, scanWallet := range s.wallets {
+		if scanWallet.ID == updateWallet.ID {
+			scanWallet.UserID = updateWallet.UserID
+			scanWallet.UserName = updateWallet.UserName
+			scanWallet.WalletName = updateWallet.WalletName
+			scanWallet.WalletType = updateWallet.WalletType
+			scanWallet.Balance = updateWallet.Balance
+			scanWallet.CreatedAt = time.Now()
+			return scanWallet, nil
+		}
+	}
+
+	return Wallet{}, errors.New("Unable to find update row!")
 }
 
 func (s StubStorer) Wallets() ([]Wallet, error) {
@@ -267,6 +285,56 @@ func TestWallet(t *testing.T) {
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("expected %v but got %v", want, got)
+		}
+	})
+
+	t.Run("given user able to update wallet should return upated wallet", func(t *testing.T) {
+		updateWallet := UpdateWallet{
+			ID:         1,
+			UserID:     14,
+			UserName:   "Jame",
+			WalletName: "Jame Wallet",
+			WalletType: "Savings",
+			Balance:    1499.00,
+		}
+		body, err := json.Marshal(updateWallet)
+		if err != nil {
+			t.Errorf("Unable to create body request, error: %v", err)
+		}
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(body))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		res := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, res)
+
+		want := Wallet{
+			ID:         updateWallet.ID,
+			UserID:     updateWallet.UserID,
+			UserName:   updateWallet.UserName,
+			WalletName: updateWallet.WalletName,
+			WalletType: updateWallet.WalletType,
+			Balance:    updateWallet.Balance,
+			CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
+		}
+		w := New(StubStorer{wallets: []Wallet{want}})
+
+		w.UpdateWallet(c)
+
+		gotJson := res.Body.Bytes()
+		var got Wallet
+		if err := json.Unmarshal(gotJson, &got); err != nil {
+			t.Errorf("Unable to unmarshal json: %v", err)
+		}
+		if got.ID != want.ID &&
+			got.UserID != want.UserID &&
+			got.UserName != want.UserName &&
+			got.WalletName != want.WalletName &&
+			got.WalletType != want.WalletType &&
+			got.Balance != want.Balance {
+			t.Errorf("expected %v but got %v", want, got)
+		}
+		if got.CreatedAt == want.CreatedAt {
+			t.Errorf("CreatedAt is not changed old=%v, new=%v", want, got)
 		}
 	})
 }
