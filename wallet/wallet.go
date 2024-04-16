@@ -19,3 +19,12 @@ type CreateWallet struct {
 	WalletType string  `json:"wallet_type"`
 	Balance    float64 `json:"balance"`
 }
+
+type UpdateWallet struct {
+	ID         int     `json:"id"`
+	UserID     int     `json:"user_id"`
+	UserName   string  `json:"user_name"`
+	WalletName string  `json:"wallet_name"`
+	WalletType string  `json:"wallet_type"`
+	Balance    float64 `json:"balance"`
+}

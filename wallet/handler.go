@@ -16,6 +16,7 @@ type Storer interface {
 	WalletsByType(walletType string) ([]Wallet, error)
 	WalletByUser(userID int) (Wallet, error)
 	CreateWallet(createWallet CreateWallet) (Wallet, error)
+	UpdateWallet(updateWallet UpdateWallet) (Wallet, error)
 }
 
 func New(db Storer) *Handler {
@@ -97,6 +98,29 @@ func (h *Handler) CreateWallet(c echo.Context) error {
 	result, err := h.store.CreateWallet(createWallet)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, result)
+}
+
+// UpdateWallet
+//
+//		@Summary		Update wallet
+//		@Description	Update wallet
+//		@Tags			wallet
+//		@Accept			json
+//		@Produce		json
+//		@Success		200	{object}	Wallet
+//		@Router			/api/v1/wallets [patch]
+//		@Failure		500	{object}	Err
+//	 	@Param 			UpdateWallet body UpdateWallet true "Body for update wallet"
+func (h *Handler) UpdateWallet(c echo.Context) error {
+	var updateWallet UpdateWallet
+	if err := c.Bind(&updateWallet); err != nil {
+		return err
+	}
+	result, err := h.store.UpdateWallet(updateWallet)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 	return c.JSON(http.StatusOK, result)
 }

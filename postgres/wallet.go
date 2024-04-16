@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -139,4 +140,29 @@ func (p *Postgres) CreateWallet(createWallet wallet.CreateWallet) (wallet.Wallet
 		}
 	}
 	return result, nil
+}
+
+func (p *Postgres) UpdateWallet(updateWallet wallet.UpdateWallet) (wallet.Wallet, error) {
+	var result wallet.Wallet
+	sqlStr := "UPDATE user_wallet SET user_id=$1, user_name=$2, wallet_name=$3," +
+		"wallet_type=$4, balance=$5, created_at=$6 WHERE id=$7 " +
+		"RETURNING id, user_id, user_name, wallet_name, wallet_type, balance, created_at"
+	rows, err := p.Db.Query(sqlStr, updateWallet.UserID, updateWallet.UserName, updateWallet.WalletName,
+		updateWallet.WalletType, updateWallet.Balance, time.Now(),
+		updateWallet.ID)
+	if err != nil {
+		return result, errors.New("unable to update row")
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err := rows.Scan(&result.ID,
+			&result.UserID,
+			&result.UserName,
+			&result.WalletName,
+			&result.WalletType,
+			&result.Balance,
+			&result.CreatedAt)
+		return result, err
+	}
+	return result, errors.New("unable to update row")
 }
