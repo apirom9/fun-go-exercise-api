@@ -343,6 +343,7 @@ func TestWallet(t *testing.T) {
 		if got != want {
 			t.Errorf("expected %v but got %v", want, got)
 		}
+	})
 
 	t.Run("given user able to update wallet should return upated wallet", func(t *testing.T) {
 		updateWallet := UpdateWallet{
@@ -372,7 +373,7 @@ func TestWallet(t *testing.T) {
 			Balance:    updateWallet.Balance,
 			CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
 		}
-		w := New(StubStorer{wallets: []Wallet{want}})
+		w := New(&StubStorer{wallets: []Wallet{want}})
 
 		w.UpdateWallet(c)
 

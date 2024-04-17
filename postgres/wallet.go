@@ -148,6 +148,7 @@ func (p *Postgres) DeleteWallet(userID int) error {
 		return err
 	}
 	return nil
+}
 
 func (p *Postgres) UpdateWallet(updateWallet wallet.UpdateWallet) (wallet.Wallet, error) {
 	var result wallet.Wallet

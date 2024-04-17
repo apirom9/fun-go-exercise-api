@@ -109,7 +109,7 @@ func (h *Handler) CreateWallet(c echo.Context) error {
 //		@Description	Delete wallet by user Id
 //		@Tags			wallet
 //		@Accept			json
-//		@Produce		json
+//		@Produce		plain
 //		@Success		200	{object}	Wallet
 //		@Router			/api/v1/users/{id}/wallets [delete]
 //		@Failure		500	{object}	Err
@@ -124,6 +124,7 @@ func (h *Handler) DeleteWallet(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 	return c.String(http.StatusOK, "Delete Success")
+}
 
 // UpdateWallet
 //
