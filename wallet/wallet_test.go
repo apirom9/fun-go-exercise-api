@@ -18,6 +18,23 @@ type StubStorer struct {
 	err     error
 }
 
+// DeleteWallet implements Storer.
+func (s *StubStorer) DeleteWallet(userID int) error {
+	var result []Wallet
+	count := 0
+	for _, wallet := range s.wallets {
+		if wallet.UserID != userID {
+			result = append(result, wallet)
+			count = count + 1
+		}
+	}
+	s.wallets = result
+	if count == 0 {
+		return errors.New("Unable to find row to delete")
+	}
+	return nil
+}
+
 func (s StubStorer) CreateWallet(createWallet CreateWallet) (Wallet, error) {
 	result := Wallet{
 		ID:         1,
@@ -84,7 +101,7 @@ func TestWallet(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
-		w := New(StubStorer{err: echo.ErrInternalServerError})
+		w := New(&StubStorer{err: echo.ErrInternalServerError})
 
 		w.WalletHandler(c)
 
@@ -127,7 +144,7 @@ func TestWallet(t *testing.T) {
 				CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
 			},
 		}
-		w := New(StubStorer{wallets: want})
+		w := New(&StubStorer{wallets: want})
 
 		w.WalletHandler(c)
 
@@ -181,7 +198,7 @@ func TestWallet(t *testing.T) {
 				CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
 			},
 		}
-		w := New(StubStorer{wallets: body})
+		w := New(&StubStorer{wallets: body})
 
 		w.WalletHandler(c)
 
@@ -233,7 +250,7 @@ func TestWallet(t *testing.T) {
 			Balance:    500.00,
 			CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
 		}
-		w := New(StubStorer{wallets: body})
+		w := New(&StubStorer{wallets: body})
 
 		w.WalletHandlerByUser(c)
 
@@ -274,7 +291,7 @@ func TestWallet(t *testing.T) {
 			Balance:    createWallet.Balance,
 			CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
 		}
-		w := New(StubStorer{wallets: []Wallet{}})
+		w := New(&StubStorer{wallets: []Wallet{}})
 
 		w.CreateWallet(c)
 
@@ -287,6 +304,45 @@ func TestWallet(t *testing.T) {
 			t.Errorf("expected %v but got %v", want, got)
 		}
 	})
+
+	t.Run("given user able to delete wallet by user id should return success message", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodDelete, "/", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		res := httptest.NewRecorder()
+		c := e.NewContext(req, res)
+		c.SetPath("/users/:id/wallets")
+		c.SetParamNames("id")
+		c.SetParamValues("2")
+		body := []Wallet{
+			{
+				ID:         1,
+				UserID:     1,
+				UserName:   "Jame Bonds",
+				WalletName: "Jame Wallet",
+				WalletType: "Saving",
+				Balance:    100.00,
+				CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
+			},
+			{
+				ID:         2,
+				UserID:     2,
+				UserName:   "Jane Bonds",
+				WalletName: "Jane Wallet",
+				WalletType: "Saving1",
+				Balance:    500.00,
+				CreatedAt:  time.Date(2024, 04, 12, 10, 45, 16, 0, time.UTC),
+			},
+		}
+		want := "Delete Success"
+		w := New(&StubStorer{wallets: body})
+
+		w.DeleteWallet(c)
+
+		got := res.Body.String()
+		if got != want {
+			t.Errorf("expected %v but got %v", want, got)
+		}
 
 	t.Run("given user able to update wallet should return upated wallet", func(t *testing.T) {
 		updateWallet := UpdateWallet{

@@ -16,6 +16,7 @@ type Storer interface {
 	WalletsByType(walletType string) ([]Wallet, error)
 	WalletByUser(userID int) (Wallet, error)
 	CreateWallet(createWallet CreateWallet) (Wallet, error)
+	DeleteWallet(userID int) error
 	UpdateWallet(updateWallet UpdateWallet) (Wallet, error)
 }
 
@@ -101,6 +102,28 @@ func (h *Handler) CreateWallet(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, result)
 }
+
+// DeleteWallet
+//
+//		@Summary		Delete wallet by user Id
+//		@Description	Delete wallet by user Id
+//		@Tags			wallet
+//		@Accept			json
+//		@Produce		json
+//		@Success		200	{object}	Wallet
+//		@Router			/api/v1/users/{id}/wallets [delete]
+//		@Failure		500	{object}	Err
+//	 	@Param          id path int true "User ID"
+func (h *Handler) DeleteWallet(c echo.Context) error {
+	userId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Unable to find wallet!"})
+	}
+	err = h.store.DeleteWallet(userId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+	return c.String(http.StatusOK, "Delete Success")
 
 // UpdateWallet
 //
